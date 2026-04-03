@@ -23,13 +23,13 @@ const{useState,useEffect,useRef,useCallback}=React;
 /* ══════════════════════════════════════════════════════════
    CONFIG  — edit these before deployment
 ══════════════════════════════════════════════════════════ */
-const ADMIN_CODE = "TEACHER2025";   // keep secret
-const DURATION_S = 90 * 60;
+const ADMIN_CODE = "SS2A_SECURE_2026_ADMIN!";   // keep secret
+const DURATION_S = 60 * 60;
 const MAX_VIOL   = 3;
 const PENALTY_PT = 0.5;
 
-// ── ID FORMAT: must match SS2A + 3 digits e.g. SS2A001 ──
-const ID_REGEX = /^SS2A\d{3}$/;
+// ── ID FORMAT: 6-character alphanumeric (e.g. ASDFGH, TD55JH) ──
+const ID_REGEX = /^[A-Z0-9]{6}$/;
 
 // ── STUDENT REGISTRY: {id → full name} ─────────────────
 // Add every registered student here before deployment.
@@ -297,7 +297,7 @@ function App(){
 
     // 1️⃣ Format validation
     if(!sid){setErr("Please enter your Student ID.");return;}
-    if(!ID_REGEX.test(sid)){setErr("Invalid ID format. Expected format: SS2A001 (SS2A + 3 digits).");return;}
+    if(!ID_REGEX.test(sid)){setErr("Invalid ID format. Use 6 uppercase letters/numbers (e.g. ASDFGH).");return;}
 
     // 2️⃣ Registry check — ID must be pre-registered
     const regName=REGISTRY[sid];
