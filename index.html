@@ -370,7 +370,7 @@ function App(){
 
         {/* Student ID — typed first, name auto-fills */}
         <label style={{display:"block",fontSize:"11px",fontWeight:"700",color:NAV,marginBottom:"5px",textTransform:"uppercase",letterSpacing:"0.5px"}}>Student ID</label>
-        <input value={lSid} onChange={handleSidChange} placeholder="e.g. SS2A001"
+        <input value={lSid} onChange={handleSidChange} placeholder="e.g. ASDFGH"
           style={{...bi,marginBottom:"8px",textTransform:"uppercase",letterSpacing:"1px",fontWeight:"700",fontSize:"16px"}}
           onFocus={e=>e.target.style.borderColor=GOLD} onBlur={e=>e.target.style.borderColor="#e2e8f0"}
           onKeyDown={e=>e.key==="Enter"&&handleLogin()}/>
