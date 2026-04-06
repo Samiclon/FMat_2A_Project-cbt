@@ -31,7 +31,7 @@ input,button,select{font-family:inherit;}
 ═══════════════════════════════════════════════════════════════ -->
 <script>
 const FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyA_fR-zidFTI4oybtz1SoL4NUVbTUWS3Kw",
+   apiKey:            "AIzaSyA_fR-zidFTI4oybtz1SoL4NUVbTUWS3Kw",
   authDomain:        "cbt-project-app.firebaseapp.com",
   databaseURL:       "https://cbt-project-app-default-rtdb.firebaseio.com",
   projectId:         "cbt-project-app",
@@ -178,9 +178,22 @@ const getAllScores=async()=>{
 };
 
 /* ── Retake helpers ───────────────────────────────────── */
-const grantRetake =sid=>fbSet(`retake/${safeSid(sid)}`,{ok:true});
-const checkRetake =async sid=>{const v=await fbGet(`retake/${safeSid(sid)}`);return v&&v.ok===true;};
-const clearRetake =async sid=>{await fbDel(`scores/${safeSid(sid)}`);await fbDel(`retake/${safeSid(sid)}`);await fbDel(`roster/${safeSid(sid)}`);};
+// grantRetake: sets the resit flag AND immediately wipes the old score
+// so the admin dashboard no longer shows stale results after granting.
+const grantRetake=async sid=>{
+  await fbSet(`retake/${safeSid(sid)}`,{ok:true,grantedAt:Date.now()});
+  await fbDel(`scores/${safeSid(sid)}`);   // remove old score immediately
+  // roster entry is kept so student stays visible as "Resit Pending"
+};
+const checkRetake=async sid=>{const v=await fbGet(`retake/${safeSid(sid)}`);return v&&v.ok===true;};
+// clearRetake: only deletes score + retake flag — roster is intentionally
+// preserved so the student cannot disappear from the admin dashboard
+// if their browser closes before submitting the resit exam.
+const clearRetake=async sid=>{
+  await fbDel(`scores/${safeSid(sid)}`);
+  await fbDel(`retake/${safeSid(sid)}`);
+  // roster NOT deleted — saveScore() will update it on submission
+};
 
 /* ── Session lock helpers ─────────────────────────────── */
 const setSession  =async(sid,token)=>fbSet(`sessions/${safeSid(sid)}`,{token,ts:Date.now()});
@@ -412,10 +425,10 @@ function App(){
     const sid=lSid.trim().toUpperCase();
     if(!sid){setErr("Please enter your Student ID.");return;}
     if(!ID_REGEX.test(sid)){setErr("Invalid format. Use 6 uppercase letters/numbers.");return;}
+    setLoading(true);
     const dr=await getDynRegistry();
     const regName=REGISTRY[sid]||(dr[sid]?.name)||"";
-    if(!regName){setErr(`"${sid}" is not registered. Check with your teacher.`);return;}
-    setLoading(true);
+    if(!regName){setLoading(false);setErr(`"${sid}" is not registered. Check with your teacher.`);return;}
     const existing=await getScore(sid);
     if(existing){const ok=await checkRetake(sid);if(!ok){setLoading(false);setErr(`"${sid}" has already completed this exam. Contact your teacher for a resit.`);return;}await clearRetake(sid);}
     const activeSess=await getSession(sid);
@@ -847,7 +860,7 @@ function App(){
 
           {/* Pending */}
           {notYet>0&&<div style={{...card,padding:"16px",marginTop:"14px"}}>
-            <h3 style={{margin:"0 0 12px",fontSize:"13px",fontWeight:"700",color:NAV}}>⏳ Students Yet to Sit ({notYet})</h3>
+            <h3 style={{margin:"0 0 12px",fontSize:"13px",fontWeight:"700",color:NAV}}>⏳ Students Yet to Sit / Resit Pending ({notYet})</h3>
             <div style={{display:"flex",flexWrap:"wrap",gap:"6px"}}>
               {Object.entries(mergedReg).filter(([id])=>!allScores.find(s=>s.sid===id)).map(([id,name])=>(
                 <span key={id} style={{background:"#f1f5f9",color:"#555",padding:"4px 10px",borderRadius:"20px",fontSize:"11px",fontWeight:"600"}}>{id} — {name}</span>
